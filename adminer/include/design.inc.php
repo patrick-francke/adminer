@@ -20,8 +20,25 @@ function page_header($title, $error = "", $breadcrumb = array(), $title2 = "") {
 <html lang="<?php echo $LANG; ?>" dir="<?php echo lang('ltr'); ?>">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="robots" content="noindex">
+<?php
+$csp_sources = "'self' https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
+header("Content-Security-Policy: script-src $csp_sources 'unsafe-inline' 'unsafe-eval'; style-src $csp_sources 'unsafe-inline'");
+?>
+
 <title><?php echo $title_page; ?></title>
 <link rel="stylesheet" type="text/css" href="../adminer/static/default.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+jQuery(document).ready(function($) {
+    initSelect2();
+    jQuery('legend a').on('click', function(e) {
+        initSelect2();
+    });
+});
+function initSelect2() { jQuery('select').select2(); }
+</script>
 <?php echo script_src("../adminer/static/functions.js"); ?>
 <?php echo script_src("static/editing.js"); ?>
 <?php if ($adminer->head()) { ?>
@@ -116,6 +133,16 @@ function page_headers() {
 	header("X-XSS-Protection: 0"); // prevents introducing XSS in IE8 by removing safe parts of the page
 	header("X-Content-Type-Options: nosniff");
 	header("Referrer-Policy: origin-when-cross-origin");
+	$csp_policy = array(
+		"default-src" => "'none'",
+		"script-src" => "'self' https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js",
+		"style-src" => "'self' https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css",
+		"font-src" => "'self' data:",
+		"img-src" => "'self' data:",
+		"connect-src" => "'self'",
+		"frame-src" => "'none'"
+	);
+	header("Content-Security-Policy: " . implode("; ", array_map(function($key, $val) { return "$key $val"; }, array_keys($csp_policy), $csp_policy)));
 	foreach ($adminer->csp() as $csp) {
 		$header = array();
 		foreach ($csp as $key => $val) {
